@@ -14,59 +14,121 @@
     <script src="vue/vue-app.js"></script>
     <script src="vue/vue-router.js"></script>
     <script src="app.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <div id="spacetraders">
-        <section class="main flex mt-3 ml-3">
-            <div class="user p-4 border mr-5">
+        <section class="main m-3">
+            <div class="user p-4 border-4 border-black mb-5 w-full">
                 <h2 class="text-xl">User info:</h2>
                 <p>Username: {{ user.username }}</p>
                 <p>Credits: {{ user.credits }}</p>
-
                 <h2 class="text-xl mt-5">User ships:</h2>
                 <div v-for="ship in user.ships">
                     <h3 class="font-bold">{{ ship.type }}</h3>
-                    <p>Fuel amount:</p>
+                    <p>Cargo space left: {{ ship.spaceAvailable }}</p>
                     <div v-for="cargo in ship.cargo" v-if="cargo.good == 'FUEL'">
-                        <p>{{ cargo.quantity }}</p>
+                        <p>- {{ cargo.quantity }} {{ cargo.good }}</p>
                     </div>
-                    <button class="bg-blue-400 text-white rounded py-2 px-4 hover:bg-blue-500">Buy fuel</button>
+                    <input type="text" v-model="fuelAmount">
+                    <button v-on:click="purchaseFuel()">Buy fuel</button>
+                    <h3 class="font-bold mt-5">Cargo list:</h3>
+                    <div v-for="cargo in ship.cargo" class="cargo-list" v-if="cargo.good != 'FUEL'">
+                        <p>- {{ cargo.quantity }} {{ cargo.good }}</p>
+                        <button v-on:click="sellGoods(cargo.good, cargo.quantity)">Sell goods
+                            - {{ cargo.quantity }}</button>
+                    </div>
+
                 </div>
             </div>
 
-            <div class="loans p-4 border mr-5">
+            <div class="loans p-4 border-4 border-black  mb-5 w-full">
                 <h2 class="text-xl font-bold">Available loans:</h2>
-                <div v-for="loan in loans">
-                    <p>Type: {{ loan.type }} </p>
-                    <p>Amount: {{ loan.amount }} </p>
-                    <p>Rate: {{ loan.rate }} </p>
-                    <p>Pay back in: {{ loan.termInDays }} days</p>
-                    <p>Requires collateral: {{ loan.collateralRequired }}</p>
-                    <button class="bg-blue-400 text-white rounded py-2 px-4 hover:bg-blue-500">Take loan</button>
-                    <hr class="my-3">
+                <div class="all-loans flex">
+                    <div v-for="loan in loans" class="mr-5 border-2 border-gray-600 p-4">
+                        <p>Type: {{ loan.type }} </p>
+                        <p>Amount: {{ loan.amount }} </p>
+                        <p>Rate: {{ loan.rate }} </p>
+                        <p>Pay back in: {{ loan.termInDays }} days</p>
+                        <p>Requires collateral: {{ loan.collateralRequired }}</p>
+                        <button v-on:click="takeLoan(loan.type)">Take loan</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="ships p-4 border-4 border-black mb-5 w-full">
+                <h2 class="text-xl font-bold">Available ships:</h2>
+                <div class="all-ships flex flex-wrap">
+                    <div v-for="ship in ships" class="mr-5 border-2 border-gray-600 p-4 mb-3">
+                        <p>Type: {{ ship.type }} </p>
+                        <p>Class: {{ ship.class }} </p>
+                        <p>Manufacturer: {{ ship.manufacturer }} </p>
+                        <p>Max cargo: {{ ship.maxCargo }}</p>
+                        <p>Plating: {{ ship.plating }}</p>
+                        <p>Speed: {{ ship.speed }}</p>
+                        <p>Weapons: {{ ship.weapons }}</p>
+                        <p>Purchase locations:</p>
+                        <ul v-for="(location, key, index) in ship.purchaseLocations" class="list-inside list-disc">
+                            <li>Location: {{ location.location }}</li>
+                            <li>Price: {{ location.price }}</li>
+                        </ul>
+                        <button>Buy ship</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="locations p-4 border-4 border-black mb-5 w-full">
+                <h2 class="text-xl font-bold">Available locations:</h2>
+                <div class="all-locations flex flex-wrap">
+                    <div v-for="location in locations" class="mr-5 border-2 border-gray-600 p-4 mb-3">
+                        <h2 class="text-lg font-bold">{{ location.name }}</h2>
+                        <p>Type: {{ location.type }}</p>
+                        <p>Symbol: {{ location.symbol }}</p>
+                        <button v-on:click="goToLocation(location.symbol)">Go to this
+                            location</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="ships p-4 border">
-                <h2 class="text-xl font-bold">Available ships:</h2>
-                <div v-for="ship in ships">
-                    <p>Type: {{ ship.type }} </p>
-                    <p>Class: {{ ship.class }} </p>
-                    <p>Manufacturer: {{ ship.manufacturer }} </p>
-                    <p>Max cargo: {{ ship.maxCargo }}</p>
-                    <p>Plating: {{ ship.plating }}</p>
-                    <p>Speed: {{ ship.speed }}</p>
-                    <p>Weapons: {{ ship.weapons }}</p>
-                    <p>Purchase locations:</p>
-                    <ul v-for="(location, key, index) in ship.purchaseLocations" class="list-inside list-disc">
-                        <li>Location: {{ location.location }}</li>
-                        <li>Price: {{ location.price }}</li>
-                    </ul>
-                    <button class="bg-blue-400 text-white rounded py-2 my-4 px-4 hover:bg-blue-500">Buy ship</button>
-                    <hr class="my-3">
+            <div class="goods p-4 border-4 border-black w-full">
+                <h2 class="text-xl font-bold">Buy goods:</h2>
+                Amount:<input type="text" v-model="amountOfGoods">
+                Type: <input type="text" v-model="typeOfGoods">
+                <button v-on:click="purchaseGoods()">Buy goods</button>
+            </div>
+
+            <div class="general-info">
+                <div class="toggle-info">close</div>
+                <h2 class="text-xl font-bold">General info:</h2>
+                <p>Current location:
+                    <div v-if="currentLocation === undefined">
+                        <span class="font-bold">Traveling</span>
+                    </div>
+                    <span class="font-bold" v-else>{{ currentLocation }}</span>
+
+                </p>
+                <p>Travel time left: {{ travelTimeRemaining }}</p>
+                <p>Traveling to: {{ travelPlan.destination }}</p>
+                <button v-on:click="goToLocation('OE-D2')">Return home</button>
+                <button v-on:click="getTravelInfo()">View travel plan</button>
+                <button v-on:click="viewMarketplace()">View available goods</button>
+                <button v-on:click="showMap = true">Open map</button>
+            </div>
+
+            <div class="map" v-if="showMap == true">
+                <div class="board">
+                    <!-- <div class="boardpiece" v-for="x in 225">
+                        <p v-if="x == 120">x15</p>
+                        <p v-if="x == 106">x0</p>
+                        <p v-if="x == 8">y0</p>
+                        <p v-if="x == 218">y15</p>
+                    </div> -->
                 </div>
             </div>
+
         </section>
     </div>
 </body>
